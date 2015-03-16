@@ -1,0 +1,40 @@
+#!/bin/bash
+
+init_repo () {
+  if ! [ -d .git ]
+  then
+    git init
+  fi
+}
+
+last_commit_full () {
+  git log --graph --pretty=format:'%Cred%h%Creset %an: %s - %Creset %C(yellow)%d%Creset %Cgreen(%cr)%Creset' --abbrev-commit --date=relative -n 1
+}
+
+last_commit_message () {
+  git log --pretty=format:%s -n 1
+}
+
+changed_files () {
+  git status -s | awk '{print $2}'
+}
+
+new_commit_message () {
+  local last_iteration=$(echo `last_commit_message 2>/dev/null` | awk -F '#' '{print int($2)}')
+  last_commit_message &>/dev/null
+  if [ $? -eq 0 ]
+  then
+    echo -e "Iteration #$(($last_iteration + 1)):\n$(changed_files)"
+  else
+    echo -e "Initial commit:\n$(changed_files)"
+  fi
+}
+
+add_and_commit() {
+  git add .
+  git commit -m "$(new_commit_message)"
+}
+
+init_repo
+add_and_commit
+last_commit_full
